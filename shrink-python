@@ -1,0 +1,31 @@
+this_folder=$(dirname $(readlink -f $(which "$0")))
+# make a temp folder and copy required src and other scripts
+workspace=`mktemp -d`
+echo "Temp workspace: $workspace"
+cd $workspace
+cp -r $1 $workspace/src
+
+# create script to run inside shrinker docker
+cat <<EOT > $workspace/docker-shrink-python
+chmod -R 777 /workspace
+su maker -c "cd /workspace && pyinstaller /workspace/src/$2.py"
+cp /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 /workspace/dist/$2/
+cp -r /workspace/dist/ /workspace/shrinked_app/
+python2.7 /usr/bin/ldtree.py --copy-to-tree /workspace/shrinked_app /workspace/dist/$2/$2
+# we don't need two copies of binary
+rm -rf /workspace/shrinked_app/workspace
+EOT
+
+# create the docker image to run shrinking code
+docker build --rm -t shrinker $this_folder/docker
+docker run -it -v $workspace:/workspace shrinker /bin/bash /workspace/docker-shrink-python /workspace/src/$2
+
+# create the final docker image
+cat <<EOT > $workspace/Dockerfile
+FROM scratch
+ADD shrinked_app /
+EOT
+docker build -no-cache -t $3 $workspace
+
+# delete workspace/may be leave for debugging
+

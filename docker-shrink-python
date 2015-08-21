@@ -1,0 +1,4 @@
+su maker -c "pyinstaller $1"
+cp /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 /tmp/dist/runproxy/
+cp -r /tmp/dist/ /export/
+python2.7 /usr/bin/ldtree.py --copy-to-tree /export dist/runproxy/runprox
