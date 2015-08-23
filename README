@@ -1,0 +1,9 @@
+docker-shrink-python is a script which shrinks docker images which use python to a minimum size. It first gets all pyt
+hon dependencies using pyinstaller and hen using a recursive version of ldd (lddtree.py) grabs the system dependencies. Result is a docker image sometime 1/20 or less in size.
+
+usage:
+docker-shrink-python <path-to-src-code-folder> <name-of-main-python-file> <name-of-docker-image>
+
+lddtree approach can be used to shrink any docker image e.g. run this inside docker image to grab dependencies
+$ python2.7 /usr/bin/ldtree.py --copy-to-tree /myapp/ /path/to/binary
+and then /myapp/ can be used to create a new docker image
